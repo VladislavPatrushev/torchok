@@ -13,6 +13,8 @@ from src.data.datasets.abc_dataset import ABCDataset
 from src.registry import DATASETS
 from ..multi import random_range
 
+from torchvision.datasets import CIFAR10
+
 
 @DATASETS.register_class
 class CIFAR10(ABCDataset):

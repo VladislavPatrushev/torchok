@@ -115,35 +115,34 @@ data:
       - *totensor
 
 trainer:
-  gpus: 1
+  accelerator: gpu
+  devices: 1
   max_epochs: 100
 #  limit_train_batches: 10
 #  limit_val_batches: 10
-  progress_bar_refresh_rate: 1
+  use_rich_bar: false
   check_val_every_n_epoch: 1
   precision: 32
-
-restore_path: '/opt/ml/checkpoints'
-do_restore: '${SM_USER_ENTRY_POINT}'
+  max_steps: -1
 
 experiment_name:  &exp_name cifar10-test
-log_dir: &logdir '/opt/ml/checkpoints'
+log_dir: &logdir 'logs'
 
 logger:
-#  logger: tensorboard  # for TensorBoard leave this line only
-  logger: mlflow
-  tags:
-    mlflow.runName: "test_run"
-  save_dir: "s3://test/mlruns"
-  secrets_manager:
-    region: "eu-west-1"
-    mlflow_secret: "acme/mlflow"
+  logger: tensorboard  # for TensorBoard leave this line only
+#  logger: mlflow
+#  tags:
+#    mlflow.runName: "test_run"
+#  save_dir: "s3://test/mlruns"
+#  secrets_manager:
+#    region: "eu-west-1"
+#    mlflow_secret: "acme/mlflow"
 
 checkpoint:
   monitor: valid/loss
   save_last: true
   mode: min
-  every_n_val_epochs: 10
+#  every_n_val_epochs: 10
 #  every_n_train_steps: 100
 
 profiler:

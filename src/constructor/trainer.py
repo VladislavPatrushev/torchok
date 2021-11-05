@@ -11,6 +11,7 @@ from pymysql import converters
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
 from pytorch_lightning.profiler import SimpleProfiler, AdvancedProfiler, PyTorchProfiler
+from pytorch_lightning.callbacks import RichProgressBar
 
 from .callbacks import create_callbacks
 from .config_structure import TensorboardLoggerParams, MLFlowLoggerParams
@@ -123,14 +124,8 @@ def download_s3_artifact(s3_path, local_path):
     return local_path
 
 
-def restore_checkpoint(restore_path, dest_checkpoint_path, do_restore):
+def restore_checkpoint(restore_path, dest_checkpoint_path):
     if not restore_path:
-        if do_restore:
-            print('WARN: You wanted to restore from checkpoint but not specified restore_path. '
-                  'Continue without restoring...')
-        return None
-    elif not do_restore:
-        print('WARN: You specified restore_path but not set do_restore to True. Continue without restoring...')
         return None
 
     # s3 files
@@ -174,14 +169,19 @@ def create_trainer(train_config, job_link):
 
     checkpoint_callback = create_checkpoint_callback(train_config.checkpoint, full_outputs_path)
     profiler = create_profiler(train_config.profiler, full_outputs_path)
-    checkpoint_restore_path = restore_checkpoint(train_config.restore_path, full_outputs_path, train_config.do_restore)
 
     trainer_params = train_config.trainer.dict()
+    trainer_params['resume_from_checkpoint'] = restore_checkpoint(trainer_params['resume_from_checkpoint'],
+                                                                  full_outputs_path)
 
     callbacks = create_callbacks(train_config.callbacks)
     callbacks.append(checkpoint_callback)
+    if trainer_params['use_rich_bar']:
+        callbacks.append(RichProgressBar(refresh_rate_per_second=trainer_params.pop('refresh_rate_per_second'),
+                                         leave=True))
+    else:
+        trainer_params.pop('refresh_rate_per_second')
 
     trainer = Trainer(logger=logger, profiler=profiler, callbacks=callbacks,
-                      resume_from_checkpoint=checkpoint_restore_path,
                       **trainer_params)
     return trainer
