@@ -16,7 +16,7 @@ class ImageSegmentationDataset(ImageDataset):
         self.update_transform_targets(transform_targets)
 
     def __getitem__(self, idx: int):
-        sample = self.get_raw(idx // self.expand_rate)
+        sample = self.get_raw(idx)
         sample = self.apply_transform(self.transform, sample)
         sample['input'] = sample['input'].type(torch.__dict__[self.input_dtype])
         if not self.test_mode:
@@ -24,7 +24,6 @@ class ImageSegmentationDataset(ImageDataset):
         return sample
 
     def get_raw(self, idx: int):
-        idx = idx // self.expand_rate
         record = self.csv.iloc[idx]
         image = self.read_image(record)
         sample = {'input': image, 'index': idx, 'shape': torch.tensor(image.shape[:2])}

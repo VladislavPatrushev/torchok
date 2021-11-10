@@ -27,7 +27,6 @@ class ImageDataset(ABCDataset):
                  target_dtype: str = 'long',
                  target_column: str = 'label',
                  grayscale: bool = False,
-                 expand_rate: int = 1,
                  test_mode: Optional[bool] = False):
         """
         Args:
@@ -42,20 +41,20 @@ class ImageDataset(ABCDataset):
             target_dtype: Data type of of the torch tensors related to the target.
             target_column: Name of the column that contains target labels.
             grayscale: If True, image will be read as grayscale otherwise as RGB.
-            expand_rate: A multiplier that shows how many times the dataset will be larger than its real size.
-                Useful for small datasets.
             test_mode: If True, only image without labels will be returned.
         """
         super().__init__(transform, augment)
         self.data_folder = Path(data_folder)
-        self.csv = pd.read_csv(self.data_folder / path_to_datalist)
+        if path_to_datalist.endswith('.pkl'):
+            self.csv = pd.read_pickle(self.data_folder / path_to_datalist)
+        else:
+            self.csv = pd.read_csv(self.data_folder / path_to_datalist)
 
         self.grayscale = grayscale
         self.test_mode = test_mode
         self.target_column = target_column
         self.input_dtype = input_dtype
         self.target_dtype = target_dtype
-        self.expand_rate = expand_rate
 
         self.update_transform_targets({'input': 'image'})
 
@@ -69,10 +68,9 @@ class ImageDataset(ABCDataset):
         return sample
 
     def __len__(self) -> int:
-        return len(self.csv) * self.expand_rate
+        return len(self.csv)
 
     def get_raw(self, idx: int) -> dict:
-        idx = idx // self.expand_rate
         record = self.csv.iloc[idx]
         image = self.read_image(record)
         sample = {"input": image, 'index': idx}

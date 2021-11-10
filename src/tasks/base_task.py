@@ -70,18 +70,32 @@ class BaseTask(LightningModule):
     def setup(self, stage: str = None):
         data_params = self.hparams.data
         common_params = data_params.common_params
+        if stage is None:
 
-        train_params = data_params.train_params
-        valid_params = data_params.valid_params
-        test_params = data_params.test_params
+            train_params = data_params.train_params
+            valid_params = data_params.valid_params
+            test_params = data_params.test_params
 
-        self.dataset_train = create_dataset(train_params.name, common_params, train_params)
-        self.dataset_valid = create_dataset(valid_params.name, common_params, valid_params)
+            self.dataset_train = create_dataset(train_params.name, common_params, train_params)
+            self.dataset_valid = create_dataset(valid_params.name, common_params, valid_params)
 
-        if test_params is None:
-            self.dataset_test = None
-        else:
-            self.dataset_test = create_dataset(test_params.name, common_params, test_params)
+            if test_params is None:
+                self.dataset_test = None
+            else:
+                self.dataset_test = create_dataset(test_params.name, common_params, test_params)
+
+        elif stage == 'train':
+            train_params = data_params.train_params
+            self.dataset_train = create_dataset(train_params.name, common_params, train_params)
+        elif stage == 'valid':
+            valid_params = data_params.valid_params
+            self.dataset_valid = create_dataset(valid_params.name, common_params, valid_params)
+        elif stage == 'test':
+            test_params = data_params.test_params
+            if test_params is None:
+                self.dataset_test = None
+            else:
+                self.dataset_test = create_dataset(test_params.name, common_params, test_params)
 
     @staticmethod
     def prepare_dataloader(dataset, params):

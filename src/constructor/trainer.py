@@ -176,9 +176,8 @@ def create_trainer(train_config, job_link):
 
     callbacks = create_callbacks(train_config.callbacks)
     callbacks.append(checkpoint_callback)
-    if trainer_params['use_rich_bar']:
-        callbacks.append(RichProgressBar(refresh_rate_per_second=trainer_params.pop('refresh_rate_per_second'),
-                                         leave=True))
+    if trainer_params.pop('use_rich_bar'):
+        callbacks.append(RichProgressBar(refresh_rate_per_second=trainer_params.pop('refresh_rate_per_second')))
     else:
         trainer_params.pop('refresh_rate_per_second')
 

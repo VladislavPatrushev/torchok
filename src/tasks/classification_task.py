@@ -61,13 +61,13 @@ class ClassificationTask(BaseTask):
             return [optimizer]
 
     def forward_with_gt(self, batch):
-        input_data = batch['input']
-        target = batch['target']
+        input_data = batch.pop('input')
+        target = batch.pop('target')
         with torch.set_grad_enabled(not self.params.freeze_backbone and self.training):
             features = self.backbone(input_data)
         features = self.pooling(features)
         prediction = self.head(features, target)
-        output = {'target': target, 'embeddings': features, 'prediction': prediction}
+        output = {**batch, 'target': target, 'embeddings': features, 'prediction': prediction}
         return output
 
     def training_step(self, batch, batch_idx):
